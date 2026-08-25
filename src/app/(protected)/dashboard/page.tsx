@@ -17,11 +17,13 @@ export default async function DashboardPage() {
   if (!user) redirect('/login')
 
   // ดึงข้อมูล profile จาก Supabase
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from('profiles')
     .select('display_name, avatar_url, role')
     .eq('id', user.id)
     .single()
+
+  const profile = profileData as { display_name?: string; avatar_url?: string; role?: string } | null
 
   // ดึงจำนวนประกาศของเจ้าของ
   const { count: listingCount } = await supabase
