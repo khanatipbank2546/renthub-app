@@ -11,27 +11,29 @@ const PROTECTED_ROUTES = ['/dashboard', '/listings/new', '/listings/edit', '/pro
 // Routes ที่ Login แล้วไม่ควรเข้า (redirect ไป dashboard)
 const AUTH_ROUTES = ['/login', '/register']
 
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://akezzyubyabmnvwlyssi.supabase.co'
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFrZXp6eXVieWFibW52d2x5c3NpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2Njk3MDEsImV4cCI6MjEwMzI0NTcwMX0.NHFro7fLnWIYO7gNE7023pCU_j3j-gdsJHqIRCYmOeA'
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
       },
-    }
-  )
+      setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        supabaseResponse = NextResponse.next({ request })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        )
+      },
+    },
+  })
 
   // ดึง session ปัจจุบัน (สำคัญ: ต้อง await เสมอ เพื่อ refresh token)
   const { data: { user } } = await supabase.auth.getUser()
@@ -43,7 +45,7 @@ export async function middleware(request: NextRequest) {
   if (!user && isProtectedRoute) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
-    loginUrl.searchParams.set('redirectTo', pathname)   // จำเส้นทางที่ต้องการไว้
+    loginUrl.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
@@ -60,7 +62,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // ตรวจทุก route ยกเว้น static files และ API routes ที่ไม่เกี่ยวกับ Auth
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

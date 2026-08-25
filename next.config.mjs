@@ -1,6 +1,5 @@
-import type { NextConfig } from 'next'
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
@@ -19,11 +18,9 @@ const nextConfig: NextConfig = {
     ],
   },
   eslint: {
-    // ป้องกัน ESLint ขัดขวางขั้นตอนการ Build บน Vercel
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // ป้องกัน TypeScript Strict mismatch ขัดขวางการ Build บน Vercel
     ignoreBuildErrors: true,
   },
   experimental: {
